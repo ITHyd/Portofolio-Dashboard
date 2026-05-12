@@ -1,0 +1,15 @@
+# Use with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Backend hot reload + source mount. Frontend and proxy disabled (use `npm run dev` for Vite HMR).
+services:
+  backend:
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./backend:/app
+      - ./Portfolio_Register_v4.xlsx:/data/Portfolio_Register_v4.xlsx:ro
+      - ./Portfolio Metric Catalogue v0.4.xlsx:/data/Portfolio Metric Catalogue v0.4.xlsx:ro
+
+  frontend:
+    profiles: ["disabled"]
+
+  proxy:
+    profiles: ["disabled"]

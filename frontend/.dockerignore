@@ -1,0 +1,12 @@
+node_modules
+dist
+.vite
+.env
+.env.*
+.git
+.gitignore
+.idea
+.vscode
+*.md
+npm-debug.log
+yarn-error.log
