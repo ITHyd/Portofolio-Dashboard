@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Save } from "lucide-react";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import { useHScroll } from "@/lib/useHScroll";
 
 const RAG = ["Green", "Amber", "Red"] as const;
 type Rag = (typeof RAG)[number];
@@ -50,6 +51,7 @@ export function WeeklyStatus() {
   const [week, setWeek] = useState(thisWeekEnding());
   const [rows, setRows] = useState<Record<number, Row>>({});
   const [saving, setSaving] = useState<number | null>(null);
+  const scrollRef = useHScroll<HTMLDivElement>();
 
   useEffect(() => {
     api.get<Project[]>("/projects").then((r) => setProjects(r.data));
@@ -109,32 +111,19 @@ export function WeeklyStatus() {
       </div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card p-4">
-        <div className="overflow-x-auto">
-          <table className="w-full table-fixed text-xs xl:text-sm">
-            <colgroup>
-              <col className="w-[15%]" />
-              <col className="w-[6.5%]" />
-              <col className="w-[6.5%]" />
-              <col className="w-[6.5%]" />
-              <col className="w-[6.5%]" />
-              <col className="w-[6.5%]" />
-              <col className="w-[15%]" />
-              <col className="w-[11.5%]" />
-              <col className="w-[9.5%]" />
-              <col className="w-[8%]" />
-              <col className="w-[8.5%]" />
-            </colgroup>
+        <div ref={scrollRef} className="overflow-x-auto">
+          <table className="w-full min-w-[1400px] text-xs xl:text-sm">
             <thead>
               <tr className="text-left text-[11px] uppercase tracking-[0.14em] text-ink-subtle">
-                <th className="pb-2 pr-2">Project</th>
+                <th className="pb-3 pr-4 whitespace-nowrap min-w-[220px]">Project</th>
                 {["Schedule", "Resource", "Scope", "Budget", "Overall"].map((c) => (
-                  <th key={c} className="pb-2 px-1 text-center">{c}</th>
+                  <th key={c} className="pb-3 px-2 text-center whitespace-nowrap min-w-[120px]">{c}</th>
                 ))}
-                <th className="pb-2 px-2">Key Flag / Comment</th>
-                <th className="pb-2 px-2">Next Milestone</th>
-                <th className="pb-2 px-1">Due</th>
-                <th className="pb-2 px-1">Status</th>
-                <th className="pb-2 pl-2 text-center">Action</th>
+                <th className="pb-3 px-2 whitespace-nowrap min-w-[260px]">Key Flag / Comment</th>
+                <th className="pb-3 px-2 whitespace-nowrap min-w-[200px]">Next Milestone</th>
+                <th className="pb-3 px-2 whitespace-nowrap min-w-[160px]">Due</th>
+                <th className="pb-3 px-2 whitespace-nowrap min-w-[150px]">Status</th>
+                <th className="pb-3 pl-2 text-center whitespace-nowrap min-w-[110px]">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -142,15 +131,15 @@ export function WeeklyStatus() {
                 const r = rows[p.id];
                 return (
                   <tr key={p.id} className="border-t border-bg-border/60 align-top">
-                    <td className="py-2 pr-2">
-                      <div className="font-semibold text-ink">{p.name}</div>
-                      <div className="truncate text-[11px] text-ink-muted">{p.client}</div>
+                    <td className="py-3 pr-4">
+                      <div className="font-semibold text-ink whitespace-nowrap">{p.name}</div>
+                      <div className="text-[11px] text-ink-muted whitespace-nowrap">{p.client}</div>
                     </td>
                     {(["schedule_rag", "resource_rag", "scope_rag", "budget_rag", "overall_rag"] as const).map((field) => (
-                      <td key={field} className="px-1 py-2">
+                      <td key={field} className="py-3 px-2">
                         <select
                           className={cn(
-                            "input w-full min-w-0 bg-white px-2 py-2 text-xs font-semibold text-ink",
+                            "input w-full bg-white px-2 py-2 text-xs font-semibold text-ink",
                             ragSelectClass(r?.[field] ?? null)
                           )}
                           value={r?.[field] ?? ""}
@@ -161,37 +150,37 @@ export function WeeklyStatus() {
                         </select>
                       </td>
                     ))}
-                    <td className="px-2 py-2">
+                    <td className="py-3 px-2">
                       <textarea
-                        className="input min-h-[68px] px-3 py-2 text-xs"
+                        className="input min-h-[68px] w-full px-3 py-2 text-xs"
                         rows={3}
                         value={r?.key_flag_comment ?? ""}
                         onChange={(e) => set(p.id, { key_flag_comment: e.target.value })}
                       />
                     </td>
-                    <td className="px-2 py-2">
+                    <td className="py-3 px-2">
                       <input
-                        className="input px-3 py-2 text-xs"
+                        className="input w-full px-3 py-2 text-xs"
                         value={r?.next_milestone ?? ""}
                         onChange={(e) => set(p.id, { next_milestone: e.target.value })}
                       />
                     </td>
-                    <td className="px-1 py-2">
+                    <td className="py-3 px-2">
                       <input
                         type="date"
-                        className="input px-2 py-2 text-xs"
+                        className="input w-full px-2 py-2 text-xs"
                         value={r?.milestone_due ?? ""}
                         onChange={(e) => set(p.id, { milestone_due: e.target.value || null })}
                       />
                     </td>
-                    <td className="px-1 py-2">
+                    <td className="py-3 px-2">
                       <input
-                        className="input px-2 py-2 text-xs"
+                        className="input w-full px-2 py-2 text-xs"
                         value={r?.milestone_status ?? ""}
                         onChange={(e) => set(p.id, { milestone_status: e.target.value })}
                       />
                     </td>
-                    <td className="py-2 pl-2">
+                    <td className="py-3 pl-2">
                       <button
                         className="btn-primary min-w-[88px] justify-center whitespace-nowrap px-3"
                         onClick={() => save(p.id)}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
+import { useHScroll } from "@/lib/useHScroll";
 
 interface Project {
   id: number;
@@ -26,6 +27,7 @@ function fmtDate(iso: string | null): string {
 
 export function Projects() {
   const [rows, setRows] = useState<Project[]>([]);
+  const scrollRef = useHScroll<HTMLDivElement>();
   useEffect(() => {
     api.get<Project[]>("/projects").then((r) => setRows(r.data));
   }, []);
@@ -40,24 +42,25 @@ export function Projects() {
       </div>
 
       <motion.div
+        ref={scrollRef}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="card overflow-x-auto p-5"
       >
-        <table className="w-full min-w-[1280px] text-sm">
+        <table className="w-full min-w-[1400px] text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wider text-ink-subtle">
-              <th className="pb-2 pr-3">Ref</th>
-              <th className="pb-2 pr-3">Project</th>
-              <th className="pb-2 pr-3">Client</th>
-              <th className="pb-2 pr-3">Sub-Proposition / Practice</th>
-              <th className="pb-2 pr-3">Phase</th>
-              <th className="pb-2 pr-3">Status</th>
-              <th className="pb-2 pr-3">Start</th>
-              <th className="pb-2 pr-3">End (Baseline)</th>
-              <th className="pb-2 pr-3">End (Forecast)</th>
-              <th className="pb-2 pr-3">PM</th>
-              <th className="pb-2">CP</th>
+              <th className="pb-3 pr-5 whitespace-nowrap">Ref</th>
+              <th className="pb-3 pr-5 whitespace-nowrap">Project</th>
+              <th className="pb-3 pr-5 whitespace-nowrap">Client</th>
+              <th className="pb-3 pr-5 whitespace-nowrap">Sub-Proposition / Practice</th>
+              <th className="pb-3 pr-5 whitespace-nowrap">Phase</th>
+              <th className="pb-3 pr-5 whitespace-nowrap">Status</th>
+              <th className="pb-3 pr-5 whitespace-nowrap">Start</th>
+              <th className="pb-3 pr-5 whitespace-nowrap">End (Baseline)</th>
+              <th className="pb-3 pr-5 whitespace-nowrap">End (Forecast)</th>
+              <th className="pb-3 pr-5 whitespace-nowrap">PM</th>
+              <th className="pb-3 whitespace-nowrap">CP</th>
             </tr>
           </thead>
           <tbody>
@@ -68,12 +71,12 @@ export function Projects() {
                 new Date(p.end_date_forecast) > new Date(p.end_date_baseline);
               return (
                 <tr key={p.id} className="border-t border-bg-border/60">
-                  <td className="py-2 pr-3 text-ink-muted">{p.ref ?? "—"}</td>
-                  <td className="py-2 pr-3 text-ink">{p.name}</td>
-                  <td className="py-2 pr-3 text-ink-muted">{p.client}</td>
-                  <td className="py-2 pr-3 text-ink-muted">{p.sub_proposition ?? "—"}</td>
-                  <td className="py-2 pr-3 text-ink-muted">{p.phase ?? "—"}</td>
-                  <td className="py-2 pr-3">
+                  <td className="py-3 pr-5 text-ink-muted whitespace-nowrap">{p.ref ?? "—"}</td>
+                  <td className="py-3 pr-5 text-ink whitespace-nowrap">{p.name}</td>
+                  <td className="py-3 pr-5 text-ink-muted whitespace-nowrap">{p.client}</td>
+                  <td className="py-3 pr-5 text-ink-muted whitespace-nowrap">{p.sub_proposition ?? "—"}</td>
+                  <td className="py-3 pr-5 text-ink-muted whitespace-nowrap">{p.phase ?? "—"}</td>
+                  <td className="py-3 pr-5 whitespace-nowrap">
                     <span
                       className={
                         p.status === "Active"
@@ -88,18 +91,18 @@ export function Projects() {
                       {p.status}
                     </span>
                   </td>
-                  <td className="py-2 pr-3 text-ink-muted">{fmtDate(p.start_date)}</td>
-                  <td className="py-2 pr-3 text-ink-muted">{fmtDate(p.end_date_baseline)}</td>
+                  <td className="py-3 pr-5 text-ink-muted whitespace-nowrap">{fmtDate(p.start_date)}</td>
+                  <td className="py-3 pr-5 text-ink-muted whitespace-nowrap">{fmtDate(p.end_date_baseline)}</td>
                   <td
                     className={
-                      "py-2 pr-3 " + (slipped ? "text-rag-amber" : "text-ink-muted")
+                      "py-3 pr-5 whitespace-nowrap " + (slipped ? "text-rag-amber" : "text-ink-muted")
                     }
                     title={slipped ? "Forecast end is later than baseline" : undefined}
                   >
                     {fmtDate(p.end_date_forecast)}
                   </td>
-                  <td className="py-2 pr-3 text-ink-muted">{p.pm_name ?? "—"}</td>
-                  <td className="py-2 text-ink-muted">{p.cp_name ?? "—"}</td>
+                  <td className="py-3 pr-5 text-ink-muted whitespace-nowrap">{p.pm_name ?? "—"}</td>
+                  <td className="py-3 text-ink-muted whitespace-nowrap">{p.cp_name ?? "—"}</td>
                 </tr>
               );
             })}

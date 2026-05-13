@@ -148,21 +148,27 @@ export function Layout() {
         style={{ marginLeft: sidebarWidth }}
         className="relative min-h-screen overflow-x-hidden transition-[margin-left] duration-200"
       >
-        <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between border-b border-bg-border/70 bg-bg-base/80 px-8 py-4 backdrop-blur-md">
-          <div className="space-y-1">
-            <div className="eyebrow">
-              <Menu size={12} />
-              Active Portfolio
+        <header className="sticky top-0 z-20 border-b border-bg-border bg-bg-base/90 px-8 py-5 backdrop-blur-md">
+          <div className="flex items-center justify-between gap-6">
+            <div className="min-w-0 flex-1">
+              <div className="eyebrow">
+                <Menu size={12} />
+                Active Portfolio
+              </div>
+              <div className="mt-1 truncate font-display text-[1.45rem] font-semibold leading-tight text-ink">
+                nxzen UK Portfolio Office
+              </div>
             </div>
-            <div className="font-display text-[1.45rem] font-semibold text-ink">nxzen UK Portfolio Office</div>
-            <div className="text-sm text-ink-muted">Operational delivery, commercial health, governance, and escalation visibility in one workspace.</div>
+            <div className="flex shrink-0 items-center gap-3">
+              <ImportButton />
+              <span className="whitespace-nowrap rounded-full border border-bg-border bg-white/75 px-3 py-2 text-xs font-semibold text-ink-muted">
+                Welcome, {user?.full_name?.split(" ")[0]}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-3 self-start pt-1">
-            <ImportButton />
-            <span className="rounded-full border border-bg-border bg-white/75 px-3 py-2 text-xs font-semibold text-ink-muted">
-              Welcome, {user?.full_name?.split(" ")[0]}
-            </span>
-          </div>
+          <p className="mt-2 text-sm leading-snug text-ink-muted">
+            Operational delivery, commercial health, governance, and escalation visibility in one workspace.
+          </p>
         </header>
         <motion.div
           key={location.pathname}
