@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -8,6 +9,8 @@ import {
   Flag,
   Layers,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
   Smile,
   Users,
   Wallet,
@@ -29,33 +32,79 @@ const NAV = [
   { to: "/governance", label: "Governance", icon: CheckCircle2 },
 ];
 
+const SIDEBAR_COLLAPSED_KEY = "nxzen.sidebar.collapsed";
+
 export function Layout() {
   const user = useAuth((s) => s.user);
   const logout = useAuth((s) => s.logout);
   const navigate = useNavigate();
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "1" : "0");
+  }, [collapsed]);
 
   return (
-    <div className="grid min-h-screen grid-cols-[250px_1fr]">
+    <div
+      className={cn(
+        "grid min-h-screen transition-[grid-template-columns] duration-200",
+        collapsed ? "grid-cols-[72px_1fr]" : "grid-cols-[250px_1fr]"
+      )}
+    >
       <aside className="flex flex-col border-r border-bg-border bg-bg-surface/40 backdrop-blur-md">
-        <div className="flex h-16 items-center gap-2 border-b border-bg-border px-5">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-accent/15 text-accent shadow-glow">
+        <div
+          className={cn(
+            "flex h-16 items-center gap-2 border-b border-bg-border",
+            collapsed ? "justify-center px-2" : "px-5"
+          )}
+        >
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent/15 text-accent shadow-glow">
             <Layers size={18} />
           </div>
-          <div>
-            <div className="font-display text-sm font-semibold">nxzen</div>
-            <div className="text-[11px] uppercase tracking-wider text-ink-subtle">Portfolio Office</div>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <div className="font-display text-sm font-semibold">nxzen</div>
+              <div className="text-[11px] uppercase tracking-wider text-ink-subtle">Portfolio Office</div>
+            </div>
+          )}
+          {!collapsed && (
+            <button
+              type="button"
+              onClick={() => setCollapsed(true)}
+              className="shrink-0 rounded-lg border border-bg-border p-1.5 text-ink-muted hover:text-ink"
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <PanelLeftClose size={14} />
+            </button>
+          )}
         </div>
-        <nav className="mt-3 flex-1 space-y-0.5 overflow-y-auto px-3">
+        {collapsed && (
+          <button
+            type="button"
+            onClick={() => setCollapsed(false)}
+            className="mx-auto mt-2 rounded-lg border border-bg-border p-1.5 text-ink-muted hover:text-ink"
+            title="Expand sidebar"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeftOpen size={14} />
+          </button>
+        )}
+        <nav className={cn("mt-3 flex-1 space-y-0.5 overflow-y-auto", collapsed ? "px-2" : "px-3")}>
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
+              title={collapsed ? label : undefined}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
+                  "flex items-center rounded-xl text-sm transition-colors",
+                  collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
                   isActive
                     ? "bg-accent/15 text-ink shadow-[inset_0_0_0_1px_rgba(99,102,241,0.35)]"
                     : "text-ink-muted hover:bg-bg-elevated/60 hover:text-ink"
@@ -63,17 +112,24 @@ export function Layout() {
               }
             >
               <Icon size={16} />
-              {label}
+              {!collapsed && label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="mt-auto border-t border-bg-border bg-bg-surface/60 px-4 py-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <div className="truncate text-sm">{user?.full_name ?? "—"}</div>
-              <div className="text-xs text-ink-subtle">{user?.role ?? ""}</div>
-            </div>
+        <div
+          className={cn(
+            "mt-auto border-t border-bg-border bg-bg-surface/60 py-3",
+            collapsed ? "px-2" : "px-4"
+          )}
+        >
+          <div className={cn("flex items-center gap-2", collapsed ? "justify-center" : "justify-between")}>
+            {!collapsed && (
+              <div className="min-w-0">
+                <div className="truncate text-sm">{user?.full_name ?? "—"}</div>
+                <div className="text-xs text-ink-subtle">{user?.role ?? ""}</div>
+              </div>
+            )}
             <button
               className="shrink-0 rounded-lg border border-bg-border p-2 text-ink-muted hover:text-ink"
               onClick={() => {
