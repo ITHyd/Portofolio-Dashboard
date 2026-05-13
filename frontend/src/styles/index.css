@@ -1,45 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Light theme (default) — clean corporate */
 :root {
   color-scheme: light;
-  --bg-base: 248 250 252;       /* slate-50 */
+  --bg-base: 246 242 244;
   --bg-surface: 255 255 255;
-  --bg-elevated: 241 245 249;   /* slate-100 */
-  --bg-border: 226 232 240;     /* slate-200 */
-  --ink: 15 23 42;              /* slate-900 */
-  --ink-muted: 71 85 105;       /* slate-600 */
-  --ink-subtle: 100 116 139;    /* slate-500 */
-  --accent: 99 102 241;         /* indigo-500 */
-  --accent-hover: 79 70 229;    /* indigo-600 */
-  --cyan-soft: 14 165 233;      /* sky-500 (slightly deeper for contrast) */
-  --shadow-card: 0 4px 18px rgba(15, 23, 42, 0.08);
+  --bg-elevated: 249 246 248;
+  --bg-border: 224 216 232;
+  --ink: 3 3 4;
+  --ink-muted: 74 68 88;
+  --ink-subtle: 138 128 150;
+  --accent: 141 233 113;
+  --accent-hover: 123 212 95;
+  --cyan-soft: 116 209 234;
+  --violet-soft: 173 150 220;
+  --shadow-card: 0 12px 30px -24px rgba(3, 3, 4, 0.35);
+  --shadow-panel: 0 20px 45px -30px rgba(3, 3, 4, 0.45);
   --aurora:
-    radial-gradient(60% 60% at 20% 10%, rgba(99, 102, 241, 0.10) 0%, transparent 60%),
-    radial-gradient(50% 50% at 80% 0%, rgba(14, 165, 233, 0.08) 0%, transparent 55%),
-    radial-gradient(80% 80% at 50% 100%, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
-}
-
-/* Dark theme — premium */
-.dark {
-  color-scheme: dark;
-  --bg-base: 11 16 32;          /* #0B1020 */
-  --bg-surface: 16 22 51;       /* #101633 */
-  --bg-elevated: 26 33 71;      /* #1A2147 */
-  --bg-border: 38 47 90;        /* #262F5A */
-  --ink: 226 232 240;           /* slate-200 */
-  --ink-muted: 148 163 184;     /* slate-400 */
-  --ink-subtle: 100 116 139;    /* slate-500 */
-  --accent: 99 102 241;
-  --accent-hover: 124 127 246;
-  --cyan-soft: 34 211 238;      /* cyan-400 */
-  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.35);
-  --aurora:
-    radial-gradient(60% 60% at 20% 10%, rgba(99, 102, 241, 0.18) 0%, transparent 60%),
-    radial-gradient(50% 50% at 80% 0%, rgba(34, 211, 238, 0.15) 0%, transparent 55%),
-    radial-gradient(80% 80% at 50% 100%, rgba(99, 102, 241, 0.10) 0%, transparent 70%);
+    radial-gradient(circle at 12% 0%, rgba(141, 233, 113, 0.10), transparent 35%),
+    radial-gradient(circle at 100% 100%, rgba(173, 150, 220, 0.12), transparent 38%),
+    linear-gradient(160deg, #faf8f9 0%, #f6f2f4 45%, #f2eef0 100%);
 }
 
 html, body, #root {
@@ -47,48 +30,98 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Manrope', 'Segoe UI', system-ui, sans-serif;
   background-color: rgb(var(--bg-base));
   background-image: var(--aurora);
   background-attachment: fixed;
   min-height: 100%;
   color: rgb(var(--ink));
+  line-height: 1.6;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  letter-spacing: -0.03em;
+}
+
+h1 {
+  font-size: clamp(1.9rem, 3.8vw, 2.9rem);
+  line-height: 1.12;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(125, 148, 173, 0.45) transparent;
 }
 
 @layer components {
   .card {
-    @apply rounded-2xl border border-bg-border bg-bg-surface/70 backdrop-blur-md shadow-card;
+    @apply rounded-[18px] border border-bg-border bg-bg-surface/90 shadow-card;
   }
+
   .card-hover {
-    @apply transition-all hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-glow;
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-soft/60 hover:shadow-[var(--shadow-panel)];
   }
+
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white shadow-glow hover:bg-accent-hover transition-colors;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-black/5 bg-accent px-4 py-2 text-sm font-semibold text-ink shadow-[0_16px_24px_-20px_rgba(141,233,113,0.55)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-hover;
   }
+
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-bg-border px-3 py-2 text-sm font-medium text-ink-muted hover:text-ink hover:border-accent/40 transition-colors;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-bg-border bg-white/75 px-3 py-2 text-sm font-semibold text-ink-muted transition-all duration-200 hover:border-violet-soft/70 hover:bg-bg-elevated hover:text-ink;
   }
+
   .input {
-    @apply w-full rounded-xl border border-bg-border bg-bg-base/60 px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent/60;
+    @apply w-full rounded-xl border border-bg-border bg-white px-4 py-3 text-sm text-ink placeholder:text-ink-subtle shadow-sm transition-all duration-150 focus:outline-none focus:ring-4 focus:ring-violet-soft/20;
   }
+
   .label {
-    @apply mb-1 block text-xs font-medium uppercase tracking-wide text-ink-muted;
+    @apply mb-2 block text-sm font-semibold text-ink-muted;
   }
+
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold;
   }
+
   .chip-green { @apply chip border-rag-green/40 bg-rag-green/10 text-rag-green; }
   .chip-amber { @apply chip border-rag-amber/40 bg-rag-amber/10 text-rag-amber; }
-  .chip-red   { @apply chip border-rag-red/40 bg-rag-red/10 text-rag-red; }
+  .chip-red { @apply chip border-rag-red/40 bg-rag-red/10 text-rag-red; }
   .chip-muted { @apply chip border-bg-border bg-bg-elevated text-ink-muted; }
+
+  .page-shell {
+    @apply relative min-h-screen;
+  }
+
+  .page-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(130, 149, 171, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(130, 149, 171, 0.08) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(circle at center, #000 40%, transparent 96%);
+    opacity: 0.45;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-[0.72rem] font-bold uppercase tracking-[0.18em];
+    background: rgb(var(--accent) / 0.22);
+    color: rgb(var(--ink));
+  }
 }
 
-/* Scrollbar — adapts to theme */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgb(var(--bg-border));
-  border-radius: 8px;
+  background: rgba(125, 148, 173, 0.45);
+  border-radius: 999px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgb(var(--ink-subtle)); }
+::-webkit-scrollbar-thumb:hover { background: rgba(95, 119, 146, 0.75); }

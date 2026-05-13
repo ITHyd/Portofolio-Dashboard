@@ -14,8 +14,8 @@ interface Props {
 }
 
 const accentMap = {
-  indigo: { stroke: "#6366F1", text: "text-accent" },
-  cyan: { stroke: "#22D3EE", text: "text-cyan-soft" },
+  indigo: { stroke: "#AD96DC", text: "text-violet-soft" },
+  cyan: { stroke: "#74D1EA", text: "text-cyan-soft" },
   green: { stroke: "#10B981", text: "text-rag-green" },
   amber: { stroke: "#F59E0B", text: "text-rag-amber" },
   red: { stroke: "#EF4444", text: "text-rag-red" },
@@ -28,9 +28,10 @@ export function KpiTile({ label, value, suffix, trend, accent = "indigo", delay 
     numeric === null
       ? String(value)
       : Number.isInteger(numeric)
-      ? Math.round(latest).toString()
-      : latest.toFixed(1)
+        ? Math.round(latest).toString()
+        : latest.toFixed(1)
   );
+
   useEffect(() => {
     if (numeric === null) return;
     const ctrl = animate(mv, numeric, { duration: 0.9, delay });
@@ -46,8 +47,8 @@ export function KpiTile({ label, value, suffix, trend, accent = "indigo", delay 
       transition={{ duration: 0.4, delay }}
       className={cn("card card-hover relative overflow-hidden p-5", pulse && "animate-pulse-glow")}
     >
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-      <div className="text-xs uppercase tracking-wider text-ink-muted">{label}</div>
+      <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-violet-soft/70 to-transparent" />
+      <div className="text-[0.72rem] font-bold uppercase tracking-[0.18em] text-ink-subtle">{label}</div>
       <div className="mt-2 flex items-end gap-1">
         <motion.div className={cn("font-display text-3xl font-semibold", a.text)}>
           {numeric === null ? value : <motion.span>{rounded}</motion.span>}

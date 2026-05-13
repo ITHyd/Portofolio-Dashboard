@@ -31,19 +31,21 @@ export function Login() {
         transition={{ duration: 0.8 }}
         className="pointer-events-none absolute inset-0 bg-aurora"
       />
+      <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,rgba(130,149,171,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(130,149,171,0.08)_1px,transparent_1px)] [background-size:42px_42px] [mask-image:radial-gradient(circle_at_center,#000_35%,transparent_90%)]" />
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="card w-full max-w-md p-8"
+        className="card relative w-full max-w-md p-8"
       >
         <div className="mb-6 flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent/15 text-accent shadow-glow">
+          <div className="grid h-11 w-11 place-items-center rounded-xl bg-accent text-ink shadow-glow">
             <ShieldCheck size={20} />
           </div>
           <div>
-            <h1 className="font-display text-xl font-semibold">nxzen Portfolio Office</h1>
-            <p className="text-xs text-ink-muted">Sign in to continue</p>
+            <div className="eyebrow mb-2">Future Foresight</div>
+            <h1 className="font-display text-[1.9rem] font-semibold">nxzen Portfolio Office</h1>
+            <p className="text-sm text-ink-muted">Sign in to continue into the Cadent-style NxZen workspace.</p>
           </div>
         </div>
 
@@ -67,7 +69,7 @@ export function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="input"
-              placeholder="••••••••"
+              placeholder="........"
             />
           </div>
 
@@ -83,7 +85,7 @@ export function Login() {
 
           <button type="submit" disabled={loading} className="btn-primary w-full">
             <LogIn size={16} />
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
 

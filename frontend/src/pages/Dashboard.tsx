@@ -77,20 +77,11 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-wider text-ink-subtle">Week ending</div>
-          <div className="font-display text-2xl">{new Date(data.week_ending).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}</div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="chip-muted">Auto-refresh on save</span>
-          <span className={`chip ${k.overall_rag === "Red" ? "chip-red" : k.overall_rag === "Amber" ? "chip-amber" : "chip-green"}`}>
-            Portfolio · {k.overall_rag}
-          </span>
-        </div>
+      <div>
+        <div className="text-xs uppercase tracking-wider text-ink-subtle">Week ending</div>
+        <div className="font-display text-2xl">{new Date(data.week_ending).toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" })}</div>
       </div>
 
-      {/* KPI strip */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <KpiTile label="Active Projects" value={k.active_projects} trend={trendY("on_time_pct")} accent="indigo" delay={0.0} />
         <KpiTile label="Active Clients" value={k.active_clients} accent="cyan" delay={0.05} />
@@ -158,7 +149,7 @@ export function Dashboard() {
           className="card p-5"
         >
           <div className="mb-2 flex items-center justify-between">
-            <div className="font-display text-sm font-semibold">Utilisation — UK vs India</div>
+            <div className="font-display text-sm font-semibold">Utilisation - UK vs India</div>
             <Users size={14} className="text-ink-muted" />
           </div>
           <div className="h-56">
@@ -169,7 +160,7 @@ export function Dashboard() {
                 <Tooltip contentStyle={chart.tooltip} />
                 <Bar dataKey="pct" radius={[8, 8, 0, 0]} animationDuration={900}>
                   {utilData.map((_d, i) => (
-                    <Cell key={i} fill={i === 0 ? "#6366F1" : "#22D3EE"} />
+                    <Cell key={i} fill={i === 0 ? "#AD96DC" : "#74D1EA"} />
                   ))}
                 </Bar>
               </BarChart>
@@ -184,7 +175,7 @@ export function Dashboard() {
           className="card p-5"
         >
           <div className="mb-2 flex items-center justify-between">
-            <div className="font-display text-sm font-semibold">RAG % — Last 8 Weeks</div>
+            <div className="font-display text-sm font-semibold">RAG % - Last 8 Weeks</div>
             <Activity size={14} className="text-ink-muted" />
           </div>
           <div className="h-56">
@@ -202,7 +193,6 @@ export function Dashboard() {
         </motion.div>
       </div>
 
-      {/* Delivery Health table */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -210,7 +200,7 @@ export function Dashboard() {
         className="card p-5"
       >
         <div className="mb-3 flex items-center justify-between">
-          <div className="font-display text-sm font-semibold">Delivery Health — by Project</div>
+          <div className="font-display text-sm font-semibold">Delivery Health - by Project</div>
           <Briefcase size={14} className="text-ink-muted" />
         </div>
         <div className="overflow-x-auto">
@@ -237,7 +227,7 @@ export function Dashboard() {
                   <td className="py-2 pr-3"><RagDot value={p.scope_rag} /></td>
                   <td className="py-2 pr-3"><RagDot value={p.budget_rag} /></td>
                   <td className="py-2 pr-3"><RagDot value={p.overall_rag} /></td>
-                  <td className="py-2 text-ink-muted">{p.next_milestone ?? "—"}</td>
+                  <td className="py-2 text-ink-muted">{p.next_milestone ?? "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -256,18 +246,18 @@ export function Dashboard() {
             <div className="font-display text-sm font-semibold">Open Risks & Issues</div>
             <AlertTriangle size={14} className="text-ink-muted" />
           </div>
-          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+          <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
             {risks.length === 0 && <div className="text-sm text-ink-muted">Nothing open. Nice.</div>}
             {risks.map((r) => (
               <div key={r.id} className="rounded-xl border border-bg-border bg-bg-elevated/40 px-3 py-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className={r.rating === "High" || r.rating === "Very High" ? "chip-red" : r.rating === "Medium" ? "chip-amber" : "chip-muted"}>
-                    {r.type ?? "Risk"} · {r.rating ?? "—"}
+                    {r.type ?? "Risk"} · {r.rating ?? "-"}
                   </span>
                   <span className="text-xs text-ink-subtle">{r.status}</span>
                 </div>
                 <div className="mt-1 line-clamp-2 text-ink">{r.description}</div>
-                <div className="mt-1 text-xs text-ink-muted">Owner: {r.owner ?? "—"}</div>
+                <div className="mt-1 text-xs text-ink-muted">Owner: {r.owner ?? "-"}</div>
               </div>
             ))}
           </div>
@@ -283,13 +273,13 @@ export function Dashboard() {
             <div className="font-display text-sm font-semibold">Escalations & Decisions Required</div>
             <AlertOctagon size={14} className="text-ink-muted" />
           </div>
-          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+          <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
             {escalations.length === 0 && <div className="text-sm text-ink-muted">No open escalations.</div>}
             {escalations.map((e) => (
               <div key={e.id} className="rounded-xl border border-bg-border bg-bg-elevated/40 px-3 py-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className={e.severity === "High" ? "chip-red" : e.severity === "Medium" ? "chip-amber" : "chip-muted"}>
-                    {e.kind} · {e.severity ?? "—"}
+                    {e.kind} · {e.severity ?? "-"}
                   </span>
                   <span className="text-xs text-ink-subtle">{new Date(e.created_at).toLocaleDateString()}</span>
                 </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Save } from "lucide-react";
 import { api } from "@/lib/api";
-import { RagDot } from "@/components/RagDot";
+import { cn } from "@/lib/cn";
 
 const RAG = ["Green", "Amber", "Red"] as const;
 type Rag = (typeof RAG)[number];
@@ -25,11 +25,24 @@ interface Row {
 
 function thisWeekEnding() {
   const d = new Date();
-  const day = d.getDay(); // 0 Sun..6 Sat
-  const offset = (5 - day + 7) % 7; // next Friday
+  const day = d.getDay();
+  const offset = (5 - day + 7) % 7;
   const target = new Date(d);
   target.setDate(d.getDate() + offset);
   return target.toISOString().slice(0, 10);
+}
+
+function ragSelectClass(value: Rag | null | undefined) {
+  if (value === "Green") {
+    return "border-rag-green/60 bg-rag-green/10 focus:ring-rag-green/20";
+  }
+  if (value === "Amber") {
+    return "border-rag-amber/60 bg-rag-amber/10 focus:ring-rag-amber/20";
+  }
+  if (value === "Red") {
+    return "border-rag-red/60 bg-rag-red/10 focus:ring-rag-red/20";
+  }
+  return "border-bg-border bg-white";
 }
 
 export function WeeklyStatus() {
@@ -87,7 +100,7 @@ export function WeeklyStatus() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between gap-4">
         <h1 className="font-display text-xl">Weekly Status Update</h1>
         <div>
           <label className="label">Week ending</label>
@@ -95,63 +108,104 @@ export function WeeklyStatus() {
         </div>
       </div>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card overflow-x-auto p-5">
-        <table className="w-full min-w-[1100px] text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-wider text-ink-subtle">
-              <th className="pb-2 pr-3">Project</th>
-              {["Schedule", "Resource", "Scope", "Budget", "Overall"].map((c) => (
-                <th key={c} className="pb-2 pr-3">{c}</th>
-              ))}
-              <th className="pb-2 pr-3">Key Flag / Comment</th>
-              <th className="pb-2 pr-3">Next Milestone</th>
-              <th className="pb-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {projects.map((p) => {
-              const r = rows[p.id];
-              return (
-                <tr key={p.id} className="border-t border-bg-border/60 align-top">
-                  <td className="py-2 pr-3 text-ink">{p.name}</td>
-                  {(["schedule_rag", "resource_rag", "scope_rag", "budget_rag", "overall_rag"] as const).map((field) => (
-                    <td key={field} className="py-2 pr-3">
-                      <select
-                        className="input w-28"
-                        value={r?.[field] ?? ""}
-                        onChange={(e) => set(p.id, { [field]: (e.target.value || null) as Rag | null } as any)}
-                      >
-                        <option value="">—</option>
-                        {RAG.map((v) => <option key={v} value={v}>{v}</option>)}
-                      </select>
-                      <div className="mt-1"><RagDot value={r?.[field] ?? null} /></div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card p-4">
+        <div className="overflow-x-auto">
+          <table className="w-full table-fixed text-xs xl:text-sm">
+            <colgroup>
+              <col className="w-[15%]" />
+              <col className="w-[6.5%]" />
+              <col className="w-[6.5%]" />
+              <col className="w-[6.5%]" />
+              <col className="w-[6.5%]" />
+              <col className="w-[6.5%]" />
+              <col className="w-[15%]" />
+              <col className="w-[11.5%]" />
+              <col className="w-[9.5%]" />
+              <col className="w-[8%]" />
+              <col className="w-[8.5%]" />
+            </colgroup>
+            <thead>
+              <tr className="text-left text-[11px] uppercase tracking-[0.14em] text-ink-subtle">
+                <th className="pb-2 pr-2">Project</th>
+                {["Schedule", "Resource", "Scope", "Budget", "Overall"].map((c) => (
+                  <th key={c} className="pb-2 px-1 text-center">{c}</th>
+                ))}
+                <th className="pb-2 px-2">Key Flag / Comment</th>
+                <th className="pb-2 px-2">Next Milestone</th>
+                <th className="pb-2 px-1">Due</th>
+                <th className="pb-2 px-1">Status</th>
+                <th className="pb-2 pl-2 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.map((p) => {
+                const r = rows[p.id];
+                return (
+                  <tr key={p.id} className="border-t border-bg-border/60 align-top">
+                    <td className="py-2 pr-2">
+                      <div className="font-semibold text-ink">{p.name}</div>
+                      <div className="truncate text-[11px] text-ink-muted">{p.client}</div>
                     </td>
-                  ))}
-                  <td className="py-2 pr-3 min-w-[220px]">
-                    <textarea
-                      className="input min-h-[40px]"
-                      rows={2}
-                      value={r?.key_flag_comment ?? ""}
-                      onChange={(e) => set(p.id, { key_flag_comment: e.target.value })}
-                    />
-                  </td>
-                  <td className="py-2 pr-3 min-w-[180px]">
-                    <input
-                      className="input"
-                      value={r?.next_milestone ?? ""}
-                      onChange={(e) => set(p.id, { next_milestone: e.target.value })}
-                    />
-                  </td>
-                  <td className="py-2">
-                    <button className="btn-primary" onClick={() => save(p.id)} disabled={saving === p.id}>
-                      <Save size={14} /> {saving === p.id ? "Saving" : "Save"}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    {(["schedule_rag", "resource_rag", "scope_rag", "budget_rag", "overall_rag"] as const).map((field) => (
+                      <td key={field} className="px-1 py-2">
+                        <select
+                          className={cn(
+                            "input w-full min-w-0 bg-white px-2 py-2 text-xs font-semibold text-ink",
+                            ragSelectClass(r?.[field] ?? null)
+                          )}
+                          value={r?.[field] ?? ""}
+                          onChange={(e) => set(p.id, { [field]: (e.target.value || null) as Rag | null } as any)}
+                        >
+                          <option value="">-</option>
+                          {RAG.map((v) => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                      </td>
+                    ))}
+                    <td className="px-2 py-2">
+                      <textarea
+                        className="input min-h-[68px] px-3 py-2 text-xs"
+                        rows={3}
+                        value={r?.key_flag_comment ?? ""}
+                        onChange={(e) => set(p.id, { key_flag_comment: e.target.value })}
+                      />
+                    </td>
+                    <td className="px-2 py-2">
+                      <input
+                        className="input px-3 py-2 text-xs"
+                        value={r?.next_milestone ?? ""}
+                        onChange={(e) => set(p.id, { next_milestone: e.target.value })}
+                      />
+                    </td>
+                    <td className="px-1 py-2">
+                      <input
+                        type="date"
+                        className="input px-2 py-2 text-xs"
+                        value={r?.milestone_due ?? ""}
+                        onChange={(e) => set(p.id, { milestone_due: e.target.value || null })}
+                      />
+                    </td>
+                    <td className="px-1 py-2">
+                      <input
+                        className="input px-2 py-2 text-xs"
+                        value={r?.milestone_status ?? ""}
+                        onChange={(e) => set(p.id, { milestone_status: e.target.value })}
+                      />
+                    </td>
+                    <td className="py-2 pl-2">
+                      <button
+                        className="btn-primary min-w-[88px] justify-center whitespace-nowrap px-3"
+                        onClick={() => save(p.id)}
+                        disabled={saving === p.id}
+                      >
+                        <Save size={14} /> {saving === p.id ? "Saving" : "Save"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </motion.div>
     </div>
   );

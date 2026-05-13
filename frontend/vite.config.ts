@@ -10,8 +10,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // In dev, backend is exposed on host port 8022 (per docker-compose).
-      "/api": "http://localhost:8022",
+      // In dev, backend is running locally on port 8000
+      "/api": "http://localhost:8000",
     },
   },
 });

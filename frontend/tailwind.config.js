@@ -5,7 +5,6 @@ export default {
   theme: {
     extend: {
       colors: {
-        // CSS-variable driven — flips with .dark on <html>
         bg: {
           base: "rgb(var(--bg-base) / <alpha-value>)",
           surface: "rgb(var(--bg-surface) / <alpha-value>)",
@@ -22,7 +21,7 @@ export default {
           hover: "rgb(var(--accent-hover) / <alpha-value>)",
         },
         cyan: { soft: "rgb(var(--cyan-soft) / <alpha-value>)" },
-        // RAG colors are semantic — same across themes
+        violet: { soft: "rgb(var(--violet-soft) / <alpha-value>)" },
         rag: {
           green: "#10B981",
           amber: "#F59E0B",
@@ -30,11 +29,11 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['"Inter"', "system-ui", "sans-serif"],
-        display: ['"Space Grotesk"', '"Inter"', "system-ui", "sans-serif"],
+        sans: ['"Manrope"', '"Segoe UI"', "system-ui", "sans-serif"],
+        display: ['"Cormorant Garamond"', '"Georgia"', "serif"],
       },
       boxShadow: {
-        glow: "0 0 24px rgb(var(--accent) / 0.35)",
+        glow: "0 16px 24px -20px rgb(var(--accent) / 0.7)",
         card: "var(--shadow-card)",
       },
       backgroundImage: {

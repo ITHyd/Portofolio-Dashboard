@@ -9,6 +9,7 @@ import {
   Flag,
   Layers,
   LogOut,
+  Menu,
   PanelLeftClose,
   PanelLeftOpen,
   Smile,
@@ -17,7 +18,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/cn";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { ImportButton } from "@/components/ImportButton";
 
 const NAV = [
@@ -48,34 +48,34 @@ export function Layout() {
     window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "1" : "0");
   }, [collapsed]);
 
+  const sidebarWidth = collapsed ? 72 : 250;
+
   return (
-    <div
-      className={cn(
-        "grid min-h-screen transition-[grid-template-columns] duration-200",
-        collapsed ? "grid-cols-[72px_1fr]" : "grid-cols-[250px_1fr]"
-      )}
-    >
-      <aside className="flex flex-col border-r border-bg-border bg-bg-surface/40 backdrop-blur-md">
+    <div className="page-shell min-h-screen">
+      <aside
+        style={{ width: sidebarWidth }}
+        className="fixed inset-y-0 left-0 z-30 flex flex-col border-r border-black/5 bg-[#111318] text-white shadow-[18px_0_36px_-28px_rgba(3,3,4,0.65)] transition-[width] duration-200"
+      >
         <div
           className={cn(
-            "flex h-16 items-center gap-2 border-b border-bg-border",
+            "flex h-20 items-center gap-3 border-b border-white/10",
             collapsed ? "justify-center px-2" : "px-5"
           )}
         >
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent/15 text-accent shadow-glow">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent text-[#111318] shadow-glow">
             <Layers size={18} />
           </div>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <div className="font-display text-sm font-semibold">nxzen</div>
-              <div className="text-[11px] uppercase tracking-wider text-ink-subtle">Portfolio Office</div>
+              <div className="font-display text-base font-semibold tracking-[-0.02em] text-white">nxzen</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent/85">Portfolio Office</div>
             </div>
           )}
           {!collapsed && (
             <button
               type="button"
               onClick={() => setCollapsed(true)}
-              className="shrink-0 rounded-lg border border-bg-border p-1.5 text-ink-muted hover:text-ink"
+              className="shrink-0 rounded-lg p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
             >
@@ -87,14 +87,14 @@ export function Layout() {
           <button
             type="button"
             onClick={() => setCollapsed(false)}
-            className="mx-auto mt-2 rounded-lg border border-bg-border p-1.5 text-ink-muted hover:text-ink"
+            className="mx-auto mt-3 rounded-lg p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
             title="Expand sidebar"
             aria-label="Expand sidebar"
           >
             <PanelLeftOpen size={14} />
           </button>
         )}
-        <nav className={cn("mt-3 flex-1 space-y-0.5 overflow-y-auto", collapsed ? "px-2" : "px-3")}>
+        <nav className={cn("mt-4 flex-1 space-y-1 overflow-y-auto", collapsed ? "px-2" : "px-3")}>
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -103,11 +103,11 @@ export function Layout() {
               title={collapsed ? label : undefined}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center rounded-xl text-sm transition-colors",
+                  "relative flex items-center rounded-xl text-sm transition-colors",
                   collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
                   isActive
-                    ? "bg-accent/15 text-ink shadow-[inset_0_0_0_1px_rgba(99,102,241,0.35)]"
-                    : "text-ink-muted hover:bg-bg-elevated/60 hover:text-ink"
+                    ? "bg-white/10 text-white shadow-[inset_3px_0_0_0_rgb(var(--accent))]"
+                    : "text-white/70 hover:bg-white/5 hover:text-white"
                 )
               }
             >
@@ -119,19 +119,19 @@ export function Layout() {
 
         <div
           className={cn(
-            "mt-auto border-t border-bg-border bg-bg-surface/60 py-3",
+            "mt-auto border-t border-white/10 bg-black/10 py-4",
             collapsed ? "px-2" : "px-4"
           )}
         >
           <div className={cn("flex items-center gap-2", collapsed ? "justify-center" : "justify-between")}>
             {!collapsed && (
               <div className="min-w-0">
-                <div className="truncate text-sm">{user?.full_name ?? "—"}</div>
-                <div className="text-xs text-ink-subtle">{user?.role ?? ""}</div>
+                <div className="truncate text-sm font-semibold text-white">{user?.full_name ?? "-"}</div>
+                <div className="text-xs uppercase tracking-[0.14em] text-white/45">{user?.role ?? ""}</div>
               </div>
             )}
             <button
-              className="shrink-0 rounded-lg border border-bg-border p-2 text-ink-muted hover:text-ink"
+              className="shrink-0 rounded-lg p-2 text-red-300 transition-colors hover:bg-red-400/10 hover:text-red-200"
               onClick={() => {
                 logout();
                 navigate("/login");
@@ -144,16 +144,24 @@ export function Layout() {
         </div>
       </aside>
 
-      <main className="relative overflow-x-hidden">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-bg-border bg-bg-base/60 px-8 backdrop-blur-md">
-          <div>
-            <div className="text-xs uppercase tracking-wider text-ink-subtle">Portfolio</div>
-            <div className="font-display text-lg font-semibold">nxzen UK · Active Portfolio</div>
+      <main
+        style={{ marginLeft: sidebarWidth }}
+        className="relative min-h-screen overflow-x-hidden transition-[margin-left] duration-200"
+      >
+        <header className="sticky top-0 z-20 flex min-h-20 items-center justify-between border-b border-bg-border/70 bg-bg-base/80 px-8 py-4 backdrop-blur-md">
+          <div className="space-y-1">
+            <div className="eyebrow">
+              <Menu size={12} />
+              Active Portfolio
+            </div>
+            <div className="font-display text-[1.45rem] font-semibold text-ink">nxzen UK Portfolio Office</div>
+            <div className="text-sm text-ink-muted">Operational delivery, commercial health, governance, and escalation visibility in one workspace.</div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 self-start pt-1">
             <ImportButton />
-            <span className="text-xs text-ink-muted">Welcome, {user?.full_name?.split(" ")[0]}</span>
-            <ThemeToggle />
+            <span className="rounded-full border border-bg-border bg-white/75 px-3 py-2 text-xs font-semibold text-ink-muted">
+              Welcome, {user?.full_name?.split(" ")[0]}
+            </span>
           </div>
         </header>
         <motion.div

@@ -52,7 +52,6 @@ export function ImportButton() {
         counts: c,
         message: `Imported ${total} rows from ${data.filename}`,
       });
-      // Soft refresh after a short pause so user reads the toast.
       setTimeout(() => window.location.reload(), 1800);
     } catch (err: any) {
       setResult({
@@ -87,7 +86,7 @@ export function ImportButton() {
         ) : (
           <Upload size={14} />
         )}
-        <span className="hidden sm:inline">{busy ? "Importing…" : "Import"}</span>
+        <span className="hidden sm:inline">{busy ? "Importing..." : "Import"}</span>
       </button>
 
       <AnimatePresence>
@@ -99,7 +98,7 @@ export function ImportButton() {
             transition={{ duration: 0.25 }}
             className="fixed right-6 top-20 z-50 max-w-sm"
             onAnimationComplete={() => {
-              if (result?.ok) return; // keep success visible until reload
+              if (result?.ok) return;
               setTimeout(() => setResult(null), 5000);
             }}
           >
@@ -121,10 +120,10 @@ export function ImportButton() {
                       <div>+ {result.counts.projects_inserted} new projects</div>
                     )}
                     {result.counts.projects_updated > 0 && (
-                      <div>↻ {result.counts.projects_updated} projects updated</div>
+                      <div>Updated {result.counts.projects_updated} projects</div>
                     )}
                     {result.counts.weekly_status_upserted > 0 && (
-                      <div>↻ {result.counts.weekly_status_upserted} weekly status rows</div>
+                      <div>Updated {result.counts.weekly_status_upserted} weekly status rows</div>
                     )}
                     {result.counts.risks_issues_inserted > 0 && (
                       <div>+ {result.counts.risks_issues_inserted} risks/issues</div>
@@ -136,9 +135,9 @@ export function ImportButton() {
                       <div>+ {result.counts.resources_inserted} resources</div>
                     )}
                     {result.counts.resource_weeks_upserted > 0 && (
-                      <div>↻ {result.counts.resource_weeks_upserted} resource-week rows</div>
+                      <div>Updated {result.counts.resource_weeks_upserted} resource-week rows</div>
                     )}
-                    <div className="pt-1 text-ink-subtle">Refreshing…</div>
+                    <div className="pt-1 text-ink-subtle">Refreshing...</div>
                   </div>
                 )}
               </div>
