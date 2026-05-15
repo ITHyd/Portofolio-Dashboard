@@ -1,36 +1,65 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { ClipboardCheck, Info } from "lucide-react";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/cn";
 
 const CHECKPOINTS = ["B1", "B2", "B3", "I1", "I2", "I3", "I4", "P1", "P2", "P3", "P4", "D1", "D2", "D3", "D4", "D5", "D6", "C1", "C2", "C3", "C4"];
 
-interface ProjectInfo { id: number; ref: string | null; name: string; client: string; }
-interface HeatmapData { projects: ProjectInfo[]; grid: Record<string, Record<string, string>>; }
+interface ProjectInfo {
+  id: number;
+  ref: string | null;
+  name: string;
+  client: string;
+}
+
+interface HeatmapData {
+  projects: ProjectInfo[];
+  grid: Record<string, Record<string, string>>;
+}
 
 const cellClass = (status?: string) =>
   status === "Complete"
     ? "bg-rag-green/20 text-rag-green"
     : status === "In Progress"
-    ? "bg-rag-amber/20 text-rag-amber"
-    : "bg-bg-elevated text-ink-subtle";
+      ? "bg-rag-amber/20 text-rag-amber"
+      : "bg-bg-elevated text-ink-subtle";
+
+function InfoHint({ text }: { text: string }) {
+  return (
+    <button
+      type="button"
+      title={text}
+      aria-label={text}
+      className="rounded-full p-1 text-violet-soft transition-colors hover:bg-violet-soft/10"
+    >
+      <Info size={14} />
+    </button>
+  );
+}
 
 export function Governance() {
   const [data, setData] = useState<HeatmapData | null>(null);
+
   useEffect(() => {
     api.get<HeatmapData>("/dashboard/governance-heatmap").then((r) => setData(r.data));
   }, []);
+
   if (!data) return null;
 
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-xl">Governance Checkpoints</h1>
+      <div className="flex items-center gap-2">
+        <ClipboardCheck size={16} className="text-ink-muted" />
+        <h1 className="font-display text-xl">Governance Checkpoints</h1>
+        <InfoHint text="Heatmap of governance checkpoint progress across active projects, showing complete, in-progress, and not-started states." />
+      </div>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card overflow-x-auto p-5">
         <table className="w-full min-w-[1100px] text-xs">
           <thead>
             <tr>
-              <th className="sticky left-0 bg-bg-surface pb-2 pr-3 text-left text-ink-subtle">Project</th>
-              {CHECKPOINTS.map((c) => <th key={c} className="px-1 pb-2 text-center text-ink-subtle">{c}</th>)}
+              <th className="sticky left-0 bg-bg-surface pb-2 pr-3 text-left text-ink-subtle" title="Project name from the active portfolio.">Project</th>
+              {CHECKPOINTS.map((c) => <th key={c} className="px-1 pb-2 text-center text-ink-subtle" title={`Governance checkpoint ${c}.`}>{c}</th>)}
             </tr>
           </thead>
           <tbody>
@@ -42,7 +71,7 @@ export function Governance() {
                   return (
                     <td key={c} className="px-0.5 py-1.5">
                       <div className={cn("grid h-8 place-items-center rounded-md text-[10px] font-medium", cellClass(status))}>
-                        {status ? status[0] : "—"}
+                        {status ? status[0] : "-"}
                       </div>
                     </td>
                   );

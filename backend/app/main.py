@@ -1,3 +1,6 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,8 +19,22 @@ from app.routers import (
     risks_issues,
     weekly_status,
 )
+from app.services.reminders import reminder_loop
 
-app = FastAPI(title="nxzen Portfolio Dashboard", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    task = None
+    if settings.reminder_enabled:
+        task = asyncio.create_task(reminder_loop())
+    try:
+        yield
+    finally:
+        if task:
+            task.cancel()
+
+
+app = FastAPI(title="nxzen Portfolio Dashboard", version="0.1.0", lifespan=lifespan)
 
 origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
 app.add_middleware(

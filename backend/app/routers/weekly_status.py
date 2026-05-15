@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.deps import get_current_user, require_roles
 from app.database import get_db
-from app.models import WeeklyStatus, User
+from app.models import Project, WeeklyStatus, User
 from app.schemas.weekly_status import WeeklyStatusCreate, WeeklyStatusOut
 
 router = APIRouter(prefix="/api/weekly-status", tags=["weekly-status"])
@@ -32,6 +32,10 @@ def upsert_weekly_status(
     db: Session = Depends(get_db),
     user: User = Depends(require_roles("pm")),
 ):
+    project = db.get(Project, payload.project_id)
+    if not project:
+        raise HTTPException(404, "Project not found")
+
     existing = db.scalar(
         select(WeeklyStatus).where(
             WeeklyStatus.project_id == payload.project_id,
@@ -39,6 +43,8 @@ def upsert_weekly_status(
         )
     )
     data = payload.model_dump()
+    data["update_date"] = data.get("update_date") or date.today()
+    data["delivery_lead"] = data.get("delivery_lead") or project.pm_name or user.full_name
     if existing:
         for k, v in data.items():
             setattr(existing, k, v)

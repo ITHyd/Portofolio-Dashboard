@@ -139,11 +139,9 @@ CREATE DATABASE portfolio_dashboard OWNER portfolio;
 
 ```powershell
 cd backend
-python -m venv .venv
-.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 copy .env.example .env   # edit JWT_SECRET, DATABASE_URL if needed
-alembic upgrade head
+python -m alembic upgrade head
 python seed.py           # creates default users + imports 16 projects + metric catalogue
 uvicorn app.main:app --reload --port 8000
 ```

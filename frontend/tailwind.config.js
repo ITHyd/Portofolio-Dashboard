@@ -31,6 +31,7 @@ export default {
       fontFamily: {
         sans: ['"Manrope"', '"Segoe UI"', "system-ui", "sans-serif"],
         display: ['"Cormorant Garamond"', '"Georgia"', "serif"],
+        numeric: ['"Sora"', '"Manrope"', '"Segoe UI"', "system-ui", "sans-serif"],
       },
       boxShadow: {
         glow: "0 16px 24px -20px rgb(var(--accent) / 0.7)",

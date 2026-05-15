@@ -13,7 +13,9 @@ class WeeklyStatusBase(BaseModel):
     scope_rag: str | None = None
     budget_rag: str | None = None
     overall_rag: str | None = None
-    key_flag_comment: str | None = None
+    weekly_update: str | None = None
+    update_date: date | None = None
+    delivery_lead: str | None = None
     next_milestone: str | None = None
     milestone_due: date | None = None
     milestone_status: str | None = None
@@ -21,8 +23,8 @@ class WeeklyStatusBase(BaseModel):
     @model_validator(mode="after")
     def check_red_has_comment(self):
         rags = [self.schedule_rag, self.resource_rag, self.scope_rag, self.budget_rag, self.overall_rag]
-        if "Red" in rags and not (self.key_flag_comment and self.key_flag_comment.strip()):
-            raise ValueError("Red RAG requires a Key Flag / Comment")
+        if "Red" in rags and not (self.weekly_update and self.weekly_update.strip()):
+            raise ValueError("Red RAG requires a weekly update")
         for v in rags:
             if v is not None and v not in RAG_VALUES:
                 raise ValueError(f"Invalid RAG value: {v}")

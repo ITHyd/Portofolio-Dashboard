@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { BellRing, Info, Plus } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface Item {
@@ -17,7 +17,10 @@ interface Item {
   created_at?: string;
 }
 
-interface Project { id: number; name: string; }
+interface Project {
+  id: number;
+  name: string;
+}
 
 const KINDS = ["Escalation", "Decision Required"];
 const SEVERITY = ["Low", "Medium", "High"];
@@ -29,6 +32,19 @@ function thisFriday() {
   const t = new Date(d);
   t.setDate(d.getDate() + offset);
   return t.toISOString().slice(0, 10);
+}
+
+function InfoHint({ text }: { text: string }) {
+  return (
+    <button
+      type="button"
+      title={text}
+      aria-label={text}
+      className="rounded-full p-1 text-violet-soft transition-colors hover:bg-violet-soft/10"
+    >
+      <Info size={14} />
+    </button>
+  );
 }
 
 export function Escalations() {
@@ -61,8 +77,12 @@ export function Escalations() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="font-display text-xl">Escalations & Decisions Required</h1>
-        <p className="text-sm text-ink-muted">New screen — owned by PMs, captured per project per week.</p>
+        <div className="flex items-center gap-2">
+          <BellRing size={16} className="text-ink-muted" />
+          <h1 className="font-display text-xl">Escalations & Decisions Required</h1>
+          <InfoHint text="Track project escalations and leadership decisions that need action before they affect delivery or client commitments." />
+        </div>
+        <p className="text-sm text-ink-muted">New screen - owned by PMs, captured per project per week.</p>
       </div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card p-5">
@@ -70,7 +90,7 @@ export function Escalations() {
           <div>
             <label className="label">Project</label>
             <select className="input" value={draft.project_id ?? ""} onChange={(e) => setDraft({ ...draft, project_id: Number(e.target.value) })}>
-              <option value="">—</option>
+              <option value="">-</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
@@ -121,14 +141,14 @@ export function Escalations() {
             <div key={e.id} className="rounded-xl border border-bg-border bg-bg-elevated/40 p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className={e.severity === "High" ? "chip-red" : e.severity === "Medium" ? "chip-amber" : "chip-muted"}>{e.kind} · {e.severity ?? "—"}</span>
+                  <span className={e.severity === "High" ? "chip-red" : e.severity === "Medium" ? "chip-amber" : "chip-muted"}>{e.kind} - {e.severity ?? "-"}</span>
                   <span className="chip-muted">{e.status}</span>
                 </div>
                 <span className="text-xs text-ink-subtle">Wk {e.week_ending}</span>
               </div>
               <div className="mt-1 font-medium text-ink">{e.title}</div>
               {e.description && <div className="mt-1 text-sm text-ink-muted">{e.description}</div>}
-              <div className="mt-1 text-xs text-ink-subtle">Owner: {e.owner ?? "—"}</div>
+              <div className="mt-1 text-xs text-ink-subtle">Owner: {e.owner ?? "-"}</div>
             </div>
           ))}
         </div>

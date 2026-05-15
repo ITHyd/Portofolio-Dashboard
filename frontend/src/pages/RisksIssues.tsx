@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Info, Plus, ShieldAlert } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface Item {
@@ -16,10 +16,26 @@ interface Item {
   date_raised: string | null;
 }
 
-interface Project { id: number; name: string; }
+interface Project {
+  id: number;
+  name: string;
+}
 
 const RATINGS = ["Low", "Medium", "High", "Very High"];
 const STATUSES = ["Open", "In Progress", "Closed"];
+
+function InfoHint({ text }: { text: string }) {
+  return (
+    <button
+      type="button"
+      title={text}
+      aria-label={text}
+      className="rounded-full p-1 text-violet-soft transition-colors hover:bg-violet-soft/10"
+    >
+      <Info size={14} />
+    </button>
+  );
+}
 
 export function RisksIssues() {
   const [items, setItems] = useState<Item[]>([]);
@@ -48,21 +64,26 @@ export function RisksIssues() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-xl">Risks & Issues</h1>
+      <div className="flex items-center gap-2">
+        <ShieldAlert size={16} className="text-ink-muted" />
+        <h1 className="font-display text-xl">Risks & Issues</h1>
+        <InfoHint text="Capture live risks and delivery issues that need mitigation, ownership, and status tracking." />
+      </div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card p-5">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <div>
             <label className="label">Project</label>
             <select className="input" value={draft.project_id ?? ""} onChange={(e) => setDraft({ ...draft, project_id: Number(e.target.value) })}>
-              <option value="">—</option>
+              <option value="">-</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
           <div>
             <label className="label">Type</label>
             <select className="input" value={draft.type ?? "Risk"} onChange={(e) => setDraft({ ...draft, type: e.target.value })}>
-              <option>Risk</option><option>Issue</option>
+              <option>Risk</option>
+              <option>Issue</option>
             </select>
           </div>
           <div>
@@ -95,25 +116,25 @@ export function RisksIssues() {
         <table className="w-full min-w-[860px] text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wider text-ink-subtle">
-              <th className="pb-2 pr-3">Type</th>
-              <th className="pb-2 pr-3">Rating</th>
-              <th className="pb-2 pr-3">Description</th>
-              <th className="pb-2 pr-3">Owner</th>
-              <th className="pb-2 pr-3">Status</th>
-              <th className="pb-2">Raised</th>
+              <th className="pb-2 pr-3" title="Whether the item is a risk or an issue.">Type</th>
+              <th className="pb-2 pr-3" title="Severity rating used to indicate delivery impact level.">Rating</th>
+              <th className="pb-2 pr-3" title="Summary of the risk or issue being tracked.">Description</th>
+              <th className="pb-2 pr-3" title="Named owner responsible for managing the item.">Owner</th>
+              <th className="pb-2 pr-3" title="Current lifecycle state of the item.">Status</th>
+              <th className="pb-2" title="Date the risk or issue was first raised.">Raised</th>
             </tr>
           </thead>
           <tbody>
             {items.map((r) => (
               <tr key={r.id} className="border-t border-bg-border/60">
-                <td className="py-2 pr-3 text-ink-muted">{r.type ?? "—"}</td>
+                <td className="py-2 pr-3 text-ink-muted">{r.type ?? "-"}</td>
                 <td className="py-2 pr-3">
-                  <span className={r.rating === "High" || r.rating === "Very High" ? "chip-red" : r.rating === "Medium" ? "chip-amber" : "chip-muted"}>{r.rating ?? "—"}</span>
+                  <span className={r.rating === "High" || r.rating === "Very High" ? "chip-red" : r.rating === "Medium" ? "chip-amber" : "chip-muted"}>{r.rating ?? "-"}</span>
                 </td>
-                <td className="py-2 pr-3 text-ink">{r.description ?? "—"}</td>
-                <td className="py-2 pr-3 text-ink-muted">{r.owner ?? "—"}</td>
-                <td className="py-2 pr-3 text-ink-muted">{r.status ?? "—"}</td>
-                <td className="py-2 text-ink-muted">{r.date_raised ?? "—"}</td>
+                <td className="py-2 pr-3 text-ink">{r.description ?? "-"}</td>
+                <td className="py-2 pr-3 text-ink-muted">{r.owner ?? "-"}</td>
+                <td className="py-2 pr-3 text-ink-muted">{r.status ?? "-"}</td>
+                <td className="py-2 text-ink-muted">{r.date_raised ?? "-"}</td>
               </tr>
             ))}
           </tbody>

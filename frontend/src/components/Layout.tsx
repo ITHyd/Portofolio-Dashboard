@@ -2,19 +2,20 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  AlertTriangle,
   BarChart3,
-  Briefcase,
-  CheckCircle2,
-  Flag,
+  BadgePoundSterling,
+  BellRing,
+  CalendarCheck2,
+  ClipboardCheck,
+  FolderKanban,
   Layers,
   LogOut,
   Menu,
+  MessageSquareHeart,
   PanelLeftClose,
   PanelLeftOpen,
-  Smile,
-  Users,
-  Wallet,
+  ShieldAlert,
+  UsersRound,
 } from "lucide-react";
 import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/cn";
@@ -22,14 +23,14 @@ import { ImportButton } from "@/components/ImportButton";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: BarChart3, end: true },
-  { to: "/projects", label: "Project Register", icon: Briefcase },
-  { to: "/weekly-status", label: "Weekly Status", icon: Flag },
-  { to: "/risks-issues", label: "Risks & Issues", icon: AlertTriangle },
-  { to: "/escalations", label: "Escalations", icon: AlertTriangle },
-  { to: "/commercial", label: "Commercial", icon: Wallet },
-  { to: "/resources", label: "Resources", icon: Users },
-  { to: "/csat", label: "Client Satisfaction", icon: Smile },
-  { to: "/governance", label: "Governance", icon: CheckCircle2 },
+  { to: "/projects", label: "Project Register", icon: FolderKanban },
+  { to: "/weekly-status", label: "Weekly Status", icon: CalendarCheck2 },
+  { to: "/risks-issues", label: "Risks & Issues", icon: ShieldAlert },
+  { to: "/escalations", label: "Escalations", icon: BellRing },
+  { to: "/commercial", label: "Commercial", icon: BadgePoundSterling },
+  { to: "/resources", label: "Resources", icon: UsersRound },
+  { to: "/csat", label: "Client Satisfaction", icon: MessageSquareHeart },
+  { to: "/governance", label: "Governance", icon: ClipboardCheck },
 ];
 
 const SIDEBAR_COLLAPSED_KEY = "nxzen.sidebar.collapsed";
@@ -62,8 +63,21 @@ export function Layout() {
             collapsed ? "justify-center px-2" : "px-5"
           )}
         >
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent text-[#111318] shadow-glow">
-            <Layers size={18} />
+          <div className={cn("relative shrink-0", collapsed && "group")}>
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-[#111318] shadow-glow transition-opacity duration-200 group-hover:opacity-0">
+              <Layers size={18} />
+            </div>
+            {collapsed && (
+              <button
+                type="button"
+                onClick={() => setCollapsed(false)}
+                className="absolute inset-0 grid place-items-center rounded-xl bg-accent text-[#111318] opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                title="Expand sidebar"
+                aria-label="Expand sidebar"
+              >
+                <PanelLeftOpen size={16} />
+              </button>
+            )}
           </div>
           {!collapsed && (
             <div className="min-w-0 flex-1">
@@ -83,17 +97,6 @@ export function Layout() {
             </button>
           )}
         </div>
-        {collapsed && (
-          <button
-            type="button"
-            onClick={() => setCollapsed(false)}
-            className="mx-auto mt-3 rounded-lg p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
-            title="Expand sidebar"
-            aria-label="Expand sidebar"
-          >
-            <PanelLeftOpen size={14} />
-          </button>
-        )}
         <nav className={cn("mt-4 flex-1 space-y-1 overflow-y-auto", collapsed ? "px-2" : "px-3")}>
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink

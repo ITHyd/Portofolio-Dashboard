@@ -1,8 +1,17 @@
 import { useEffect, useState } from "react";
+import { Info, UsersRound } from "lucide-react";
 import { api } from "@/lib/api";
 import { useHScroll } from "@/lib/useHScroll";
 
-interface Resource { id: number; code: string | null; name: string; practice: string | null; region: string | null; contract_hours_per_week: number | null; }
+interface Resource {
+  id: number;
+  code: string | null;
+  name: string;
+  practice: string | null;
+  region: string | null;
+  contract_hours_per_week: number | null;
+}
+
 interface Week {
   id?: number;
   resource_id: number;
@@ -23,6 +32,19 @@ function thisFriday() {
   return t.toISOString().slice(0, 10);
 }
 
+function InfoHint({ text }: { text: string }) {
+  return (
+    <button
+      type="button"
+      title={text}
+      aria-label={text}
+      className="rounded-full p-1 text-violet-soft transition-colors hover:bg-violet-soft/10"
+    >
+      <Info size={14} />
+    </button>
+  );
+}
+
 export function Resources() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [rows, setRows] = useState<Record<number, Week>>({});
@@ -32,6 +54,7 @@ export function Resources() {
   useEffect(() => {
     api.get<Resource[]>("/resources").then((r) => setResources(r.data));
   }, []);
+
   useEffect(() => {
     api.get<Week[]>("/resources/weeks", { params: { week_ending: week } }).then((r) => {
       const map: Record<number, Week> = {};
@@ -55,6 +78,7 @@ export function Resources() {
       return { ...s, [rid]: { ...existing, ...p } };
     });
   }
+
   async function save(rid: number) {
     await api.post("/resources/weeks", { ...rows[rid], resource_id: rid, week_ending: week });
   }
@@ -62,7 +86,11 @@ export function Resources() {
   return (
     <div className="space-y-4">
       <div className="flex items-end justify-between">
-        <h1 className="font-display text-xl">Resource & Utilisation</h1>
+        <div className="flex items-center gap-2">
+          <UsersRound size={16} className="text-ink-muted" />
+          <h1 className="font-display text-xl">Resource & Utilisation</h1>
+          <InfoHint text="Track weekly leave, billable and non-billable hours, utilisation, assignments, and bench status across the resource pool." />
+        </div>
         <div>
           <label className="label">Week ending</label>
           <input type="date" className="input w-44" value={week} onChange={(e) => setWeek(e.target.value)} />
@@ -72,16 +100,16 @@ export function Resources() {
         <table className="w-full min-w-[1250px] text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wider text-ink-subtle">
-              <th className="pb-3 pr-4 whitespace-nowrap">Name</th>
-              <th className="pb-3 pr-4 whitespace-nowrap">Practice</th>
-              <th className="pb-3 pr-4 whitespace-nowrap">Region</th>
-              <th className="pb-3 pr-4 whitespace-nowrap">Leave</th>
-              <th className="pb-3 pr-4 whitespace-nowrap">Billable</th>
-              <th className="pb-3 pr-4 whitespace-nowrap">Non-billable</th>
-              <th className="pb-3 pr-4 whitespace-nowrap">Util %</th>
-              <th className="pb-3 pr-4 whitespace-nowrap">Assigned</th>
-              <th className="pb-3 pr-4 whitespace-nowrap">Status</th>
-              <th className="pb-3"></th>
+              <th className="pb-3 pr-4 whitespace-nowrap" title="Resource name.">Name</th>
+              <th className="pb-3 pr-4 whitespace-nowrap" title="Practice, capability, or function the resource belongs to.">Practice</th>
+              <th className="pb-3 pr-4 whitespace-nowrap" title="Primary geography or delivery region for the resource.">Region</th>
+              <th className="pb-3 pr-4 whitespace-nowrap" title="Leave hours recorded for the selected week.">Leave</th>
+              <th className="pb-3 pr-4 whitespace-nowrap" title="Billable delivery hours recorded for the selected week.">Billable</th>
+              <th className="pb-3 pr-4 whitespace-nowrap" title="Non-billable hours recorded for the selected week.">Non-billable</th>
+              <th className="pb-3 pr-4 whitespace-nowrap" title="Utilisation percentage for the selected week.">Util %</th>
+              <th className="pb-3 pr-4 whitespace-nowrap" title="Assigned project references for the selected week.">Assigned</th>
+              <th className="pb-3 pr-4 whitespace-nowrap" title="Current assignment state such as assigned, part-assigned, or bench.">Status</th>
+              <th className="pb-3" title="Save weekly resource values for this row."></th>
             </tr>
           </thead>
           <tbody>
@@ -90,11 +118,11 @@ export function Resources() {
               return (
                 <tr key={r.id} className="border-t border-bg-border/60">
                   <td className="py-3 pr-4 text-ink whitespace-nowrap">{r.name}</td>
-                  <td className="py-3 pr-4 text-ink-muted whitespace-nowrap">{r.practice ?? "—"}</td>
-                  <td className="py-3 pr-4 text-ink-muted whitespace-nowrap">{r.region ?? "—"}</td>
+                  <td className="py-3 pr-4 text-ink-muted whitespace-nowrap">{r.practice ?? "-"}</td>
+                  <td className="py-3 pr-4 text-ink-muted whitespace-nowrap">{r.region ?? "-"}</td>
                   {(["leave_hrs", "billable_hrs", "non_billable_hrs"] as const).map((f) => (
                     <td key={f} className="py-3 pr-4">
-                      <input type="number" className="input w-24" value={(w?.[f] as number | null) ?? ""} onChange={(e) => patch(r.id, { [f]: e.target.value === "" ? null : Number(e.target.value) } as any)} />
+                      <input type="number" className="input w-24" value={(w?.[f] as number | null) ?? ""} onChange={(e) => patch(r.id, { [f]: e.target.value === "" ? null : Number(e.target.value) } as never)} />
                     </td>
                   ))}
                   <td className="py-3 pr-4">
@@ -105,7 +133,10 @@ export function Resources() {
                   </td>
                   <td className="py-3 pr-4">
                     <select className="input w-36" value={w?.assignment_status ?? ""} onChange={(e) => patch(r.id, { assignment_status: e.target.value || null })}>
-                      <option value="">—</option><option>Assigned</option><option>Part-assigned</option><option>Bench</option>
+                      <option value="">-</option>
+                      <option>Assigned</option>
+                      <option>Part-assigned</option>
+                      <option>Bench</option>
                     </select>
                   </td>
                   <td className="py-3"><button className="btn-primary" onClick={() => save(r.id)}>Save</button></td>

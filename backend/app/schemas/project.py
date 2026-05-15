@@ -17,6 +17,9 @@ class ProjectBase(BaseModel):
     margin_target_pct: float | None = None
     pm_name: str | None = None
     cp_name: str | None = None
+    current_milestone: str | None = None
+    current_milestone_due: date | None = None
+    current_milestone_status: str | None = None
     project_code: str | None = None
     notes: str | None = None
 
