@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 
 class GovCheckpointBase(BaseModel):
@@ -8,6 +8,12 @@ class GovCheckpointBase(BaseModel):
     status: str = "Not Started"
     evidence_url: str | None = None
     notes: str | None = None
+
+    @model_validator(mode="after")
+    def normalize_status(self):
+        if self.status == "Complete":
+            self.status = "Completed"
+        return self
 
 
 class GovCheckpointCreate(GovCheckpointBase):
@@ -18,6 +24,12 @@ class GovCheckpointUpdate(BaseModel):
     status: str | None = None
     evidence_url: str | None = None
     notes: str | None = None
+
+    @model_validator(mode="after")
+    def normalize_status(self):
+        if self.status == "Complete":
+            self.status = "Completed"
+        return self
 
 
 class GovCheckpointOut(GovCheckpointBase):

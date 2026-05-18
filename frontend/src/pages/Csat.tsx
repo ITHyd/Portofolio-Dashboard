@@ -40,9 +40,21 @@ export function Csat() {
     setItems(r.data);
   }
 
-  useEffect(() => {
+  function loadProjects() {
     api.get<Project[]>("/projects").then((r) => setProjects(r.data));
+  }
+
+  useEffect(() => {
+    loadProjects();
     load();
+  }, []);
+
+  useEffect(() => {
+    const onProjectCreated = () => {
+      loadProjects();
+    };
+    window.addEventListener("portfolio-project-created", onProjectCreated);
+    return () => window.removeEventListener("portfolio-project-created", onProjectCreated);
   }, []);
 
   async function submit() {

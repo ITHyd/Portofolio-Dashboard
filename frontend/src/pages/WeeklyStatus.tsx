@@ -4,6 +4,7 @@ import { CalendarCheck2, Clock3, History, Info, Save, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { useAuth } from "@/store/auth";
+import { SuccessToast } from "@/components/SuccessToast";
 
 const RAG = ["Green", "Amber", "Red"] as const;
 type Rag = (typeof RAG)[number];
@@ -53,6 +54,13 @@ function ragSelectClass(value: Rag | null | undefined) {
   return "border-bg-border bg-white";
 }
 
+function ragChipClass(value: Rag | null | undefined) {
+  if (value === "Green") return "chip-green";
+  if (value === "Amber") return "chip-amber";
+  if (value === "Red") return "chip-red";
+  return "chip-muted";
+}
+
 function InfoHint({ text }: { text: string }) {
   return (
     <button
@@ -93,9 +101,22 @@ export function WeeklyStatus() {
   const [historyRows, setHistoryRows] = useState<Row[]>([]);
   const [saving, setSaving] = useState<number | null>(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  function loadProjects() {
+    api.get<Project[]>("/projects").then((r) => setProjects(r.data));
+  }
 
   useEffect(() => {
-    api.get<Project[]>("/projects").then((r) => setProjects(r.data));
+    loadProjects();
+  }, []);
+
+  useEffect(() => {
+    const onProjectCreated = () => {
+      loadProjects();
+    };
+    window.addEventListener("portfolio-project-created", onProjectCreated);
+    return () => window.removeEventListener("portfolio-project-created", onProjectCreated);
   }, []);
 
   useEffect(() => {
@@ -122,6 +143,21 @@ export function WeeklyStatus() {
       .then((r) => setHistoryRows(r.data.slice().reverse()))
       .finally(() => setLoadingHistory(false));
   }, [selectedProjectId]);
+
+  useEffect(() => {
+    if (selectedProjectId === null) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [selectedProjectId]);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = window.setTimeout(() => setToastMessage(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage]);
 
   function setRow(pid: number, patch: Partial<Row>) {
     const project = projects.find((entry) => entry.id === pid);
@@ -150,7 +186,14 @@ export function WeeklyStatus() {
     try {
       const { data } = await api.post<Row>("/weekly-status", row);
       setRows((state) => ({ ...state, [pid]: data }));
-      setSelectedProjectId(null);
+      window.dispatchEvent(new Event("portfolio-risk-sync"));
+      setToastMessage("Weekly update saved successfully");
+      if (selectedProjectId === pid) {
+        setHistoryRows((current) => {
+          const withoutCurrent = current.filter((item) => item.week_ending !== data.week_ending);
+          return [...withoutCurrent, data].sort((a, b) => a.week_ending.localeCompare(b.week_ending)).reverse();
+        });
+      }
     } finally {
       setSaving(null);
     }
@@ -206,7 +249,7 @@ export function WeeklyStatus() {
                             ? "border-rag-red/40 bg-rag-red/10 text-rag-red"
                             : "border-bg-border bg-white text-ink-muted"
                     )}>
-                      {row?.overall_rag ?? "Blank"}
+                      {row?.overall_rag ?? "-"}
                     </span>
                   </td>
                   <td className="max-w-[300px] py-3 pr-4 text-ink-muted">{row?.weekly_update?.trim() || "-"}</td>
@@ -229,13 +272,13 @@ export function WeeklyStatus() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/35 px-6 py-8 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/35 p-6 backdrop-blur-sm"
           >
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 16 }}
-              className="mx-auto flex h-full max-w-7xl flex-col overflow-hidden rounded-[24px] border border-bg-border bg-bg-base shadow-[0_24px_80px_-35px_rgba(3,3,4,0.45)]"
+              className="flex max-h-[calc(100vh-3rem)] w-full max-w-7xl flex-col overflow-hidden rounded-[24px] border border-bg-border bg-bg-base shadow-[0_24px_80px_-35px_rgba(3,3,4,0.45)]"
             >
               <div className="flex items-start justify-between border-b border-bg-border px-6 py-5">
                 <div>
@@ -358,12 +401,12 @@ export function WeeklyStatus() {
                       <div key={`${item.project_id}-${item.week_ending}`} className="rounded-2xl border border-bg-border bg-white/80 p-4 text-sm">
                         <div className="flex items-center justify-between gap-3">
                           <div className="font-semibold text-ink">{item.week_ending}</div>
-                          <span className="chip-muted">{item.overall_rag ?? "No overall RAG"}</span>
+                          <span className={ragChipClass(item.overall_rag)}>{item.overall_rag ?? "-"}</span>
                         </div>
                         <div className="mt-2 flex items-center gap-2 text-xs text-ink-subtle">
                           <Clock3 size={12} />
                           <span>{item.update_date ?? "-"}</span>
-                          <span>•</span>
+                          <span>-</span>
                           <span>{item.delivery_lead ?? "-"}</span>
                         </div>
                         <div className="mt-3 text-sm text-ink-muted">{item.weekly_update?.trim() || "No weekly update provided."}</div>
@@ -379,6 +422,7 @@ export function WeeklyStatus() {
           </motion.div>
         )}
       </AnimatePresence>
+      <SuccessToast message={toastMessage} onClose={() => setToastMessage(null)} />
     </div>
   );
 }

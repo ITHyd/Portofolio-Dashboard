@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.auth.deps import get_current_user
 from app.database import get_db
 from app.models import (
+    Commercial,
     EscalationDecision,
     GovCheckpoint,
     Project,
@@ -43,6 +44,10 @@ def _latest_status_per_project(db: Session) -> dict[int, WeeklyStatus]:
         )
     ).all()
     return {r.project_id: r for r in rows}
+
+
+def _format_month_label(value: date) -> str:
+    return value.strftime("%b %y")
 
 
 def _rag_pct(rows: list[WeeklyStatus]):
@@ -166,6 +171,53 @@ def summary(
         or 0
     )
 
+    active_project_ids = [p.id for p in active_projects]
+    commercial_rows: list[Commercial] = []
+    latest_commercial_month = None
+    if active_project_ids:
+        commercial_rows = db.scalars(
+            select(Commercial)
+            .where(Commercial.project_id.in_(active_project_ids))
+            .order_by(Commercial.period_month.asc())
+        ).all()
+        latest_commercial_month = max((row.period_month for row in commercial_rows), default=None)
+
+    commercial_by_month: dict[date, list[Commercial]] = defaultdict(list)
+    for row in commercial_rows:
+        commercial_by_month[row.period_month].append(row)
+
+    commercial_months = sorted(commercial_by_month.keys())[-4:]
+    commercial_trend = []
+    for month in commercial_months:
+        rows = commercial_by_month[month]
+        margin_values = [float(r.margin_forecast_pct) for r in rows if r.margin_forecast_pct is not None]
+        commercial_trend.append(
+            {
+                "period_month": month.isoformat(),
+                "label": _format_month_label(month),
+                "revenue_plan_mtd": round(
+                    sum(float(r.revenue_plan_mtd or 0) for r in rows), 2
+                )
+                if any(r.revenue_plan_mtd is not None for r in rows)
+                else None,
+                "revenue_actual_mtd": round(
+                    sum(float(r.revenue_actual_mtd or 0) for r in rows), 2
+                )
+                if any(r.revenue_actual_mtd is not None for r in rows)
+                else None,
+                "margin_forecast_pct": round(sum(margin_values) / len(margin_values), 2)
+                if margin_values
+                else None,
+                "pipeline_value_gbp": round(
+                    sum(float(r.pipeline_value_gbp or 0) for r in rows), 2
+                )
+                if any(r.pipeline_value_gbp is not None for r in rows)
+                else None,
+            }
+        )
+
+    latest_commercial = commercial_trend[-1] if commercial_trend else None
+
     # 8-week trend uses status_week as the anchor; latest-per-project semantics don't apply here
     # (we want per-week portfolio mix, even if some projects didn't update that week).
     weeks_back = [status_week - timedelta(weeks=i) for i in range(7, -1, -1)]
@@ -225,6 +277,7 @@ def summary(
     return {
         "week_ending": status_week.isoformat(),
         "resource_week_ending": resource_week.isoformat() if resource_week else None,
+        "commercial_month": latest_commercial_month.isoformat() if latest_commercial_month else None,
         "kpis": {
             "active_projects": len(active_projects),
             "active_clients": len(active_clients),
@@ -241,8 +294,13 @@ def summary(
             "open_risks": int(open_risks),
             "open_issues": int(open_issues),
             "open_escalations": int(open_escalations),
+            "commercial_revenue_plan_mtd": latest_commercial["revenue_plan_mtd"] if latest_commercial else None,
+            "commercial_revenue_actual_mtd": latest_commercial["revenue_actual_mtd"] if latest_commercial else None,
+            "commercial_margin_forecast_pct": latest_commercial["margin_forecast_pct"] if latest_commercial else None,
+            "commercial_pipeline_value_gbp": latest_commercial["pipeline_value_gbp"] if latest_commercial else None,
         },
         "trend": trend,
+        "commercial_trend": commercial_trend,
         "project_health": project_health,
     }
 

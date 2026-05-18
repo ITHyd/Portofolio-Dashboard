@@ -7,6 +7,7 @@ from app.auth.deps import get_current_user, require_roles
 from app.database import get_db
 from app.models import Project, WeeklyStatus, User
 from app.schemas.weekly_status import WeeklyStatusCreate, WeeklyStatusOut
+from app.services.delivery_sync import sync_risk_for_weekly_status
 
 router = APIRouter(prefix="/api/weekly-status", tags=["weekly-status"])
 
@@ -49,11 +50,14 @@ def upsert_weekly_status(
         for k, v in data.items():
             setattr(existing, k, v)
         existing.updated_by_user_id = user.id
+        sync_risk_for_weekly_status(db, existing, project)
         db.commit()
         db.refresh(existing)
         return existing
     row = WeeklyStatus(**data, updated_by_user_id=user.id)
     db.add(row)
+    db.flush()
+    sync_risk_for_weekly_status(db, row, project)
     db.commit()
     db.refresh(row)
     return row

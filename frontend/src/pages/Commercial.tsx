@@ -46,14 +46,26 @@ export function Commercial() {
   const month = monthStart();
   const scrollRef = useHScroll<HTMLDivElement>();
 
-  useEffect(() => {
+  function loadProjects() {
     api.get<Project[]>("/projects").then((r) => setProjects(r.data));
+  }
+
+  useEffect(() => {
+    loadProjects();
     api.get<Row[]>("/commercial", { params: { period_month: month } }).then((r) => {
       const map: Record<number, Row> = {};
       r.data.forEach((x) => (map[x.project_id] = x));
       setRows(map);
     });
   }, [month]);
+
+  useEffect(() => {
+    const onProjectCreated = () => {
+      loadProjects();
+    };
+    window.addEventListener("portfolio-project-created", onProjectCreated);
+    return () => window.removeEventListener("portfolio-project-created", onProjectCreated);
+  }, []);
 
   function patch(pid: number, p: Partial<Row>) {
     setRows((s) => {

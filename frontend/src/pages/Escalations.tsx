@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { BellRing, Info, Plus } from "lucide-react";
 import { api } from "@/lib/api";
+import { SuccessToast } from "@/components/SuccessToast";
 
 interface Item {
   id?: number;
@@ -50,6 +51,7 @@ function InfoHint({ text }: { text: string }) {
 export function Escalations() {
   const [items, setItems] = useState<Item[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [draft, setDraft] = useState<Partial<Item>>({
     kind: "Escalation",
     severity: "Medium",
@@ -62,16 +64,60 @@ export function Escalations() {
     setItems(r.data);
   }
 
-  useEffect(() => {
+  function loadProjects() {
     api.get<Project[]>("/projects").then((r) => setProjects(r.data));
+  }
+
+  useEffect(() => {
+    loadProjects();
     load();
   }, []);
+
+  useEffect(() => {
+    const onFocus = () => {
+      load();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        load();
+      }
+    };
+    const onEscalationSync = () => {
+      load();
+    };
+    const onProjectCreated = () => {
+      loadProjects();
+      load();
+    };
+
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("portfolio-escalation-sync", onEscalationSync);
+    window.addEventListener("portfolio-project-created", onProjectCreated);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("portfolio-escalation-sync", onEscalationSync);
+      window.removeEventListener("portfolio-project-created", onProjectCreated);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = window.setTimeout(() => setToastMessage(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage]);
+
+  function projectName(projectId: number) {
+    return projects.find((project) => project.id === projectId)?.name ?? "-";
+  }
 
   async function submit() {
     if (!draft.project_id || !draft.title) return;
     await api.post("/escalations", draft);
     setDraft({ kind: "Escalation", severity: "Medium", status: "Open", week_ending: thisFriday() });
     load();
+    setToastMessage("Escalation saved successfully");
   }
 
   return (
@@ -146,13 +192,14 @@ export function Escalations() {
                 </div>
                 <span className="text-xs text-ink-subtle">Wk {e.week_ending}</span>
               </div>
-              <div className="mt-1 font-medium text-ink">{e.title}</div>
-              {e.description && <div className="mt-1 text-sm text-ink-muted">{e.description}</div>}
+              <div className="mt-2 text-xs uppercase tracking-[0.12em] text-ink-subtle">{projectName(e.project_id)}</div>
+              <div className="mt-1 text-sm text-ink">{e.title}</div>
               <div className="mt-1 text-xs text-ink-subtle">Owner: {e.owner ?? "-"}</div>
             </div>
           ))}
         </div>
       </div>
+      <SuccessToast message={toastMessage} onClose={() => setToastMessage(null)} />
     </div>
   );
 }

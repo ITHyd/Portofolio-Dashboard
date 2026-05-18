@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   Cell,
@@ -19,6 +21,7 @@ import { useChartTheme } from "@/lib/chartTheme";
 
 interface Summary {
   week_ending: string;
+  commercial_month: string | null;
   kpis: {
     active_projects: number;
     active_clients: number;
@@ -35,8 +38,20 @@ interface Summary {
     open_risks: number;
     open_issues: number;
     open_escalations: number;
+    commercial_revenue_plan_mtd: number | null;
+    commercial_revenue_actual_mtd: number | null;
+    commercial_margin_forecast_pct: number | null;
+    commercial_pipeline_value_gbp: number | null;
   };
   trend: { week_ending: string; green_pct: number; amber_pct: number; red_pct: number; on_time_pct: number }[];
+  commercial_trend: {
+    period_month: string;
+    label: string;
+    revenue_plan_mtd: number | null;
+    revenue_actual_mtd: number | null;
+    margin_forecast_pct: number | null;
+    pipeline_value_gbp: number | null;
+  }[];
   project_health: any[];
 }
 
@@ -46,10 +61,38 @@ export function Dashboard() {
   const [escalations, setEscalations] = useState<any[]>([]);
   const chart = useChartTheme();
 
-  useEffect(() => {
+  function loadDashboard() {
     api.get<Summary>("/dashboard/summary").then((r) => setData(r.data));
-    api.get("/risks-issues", { params: { status: "In Progress" } }).then((r) => setRisks(r.data));
-    api.get("/escalations", { params: { status: "Open" } }).then((r) => setEscalations(r.data));
+    api.get("/risks-issues").then((r) => setRisks((r.data ?? []).filter((item: any) => item.status !== "Closed")));
+    api.get("/escalations").then((r) =>
+      setEscalations((r.data ?? []).filter((item: any) => item.status === "Open" || item.status === "In Progress"))
+    );
+  }
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  useEffect(() => {
+    const onProjectCreated = () => {
+      loadDashboard();
+    };
+    const onFocus = () => {
+      loadDashboard();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadDashboard();
+      }
+    };
+    window.addEventListener("portfolio-project-created", onProjectCreated);
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("portfolio-project-created", onProjectCreated);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   if (!data) {
@@ -74,30 +117,51 @@ export function Dashboard() {
     { region: "UK", pct: k.utilisation_uk },
     { region: "India", pct: k.utilisation_india },
   ];
+  const projectNameById = new Map(data.project_health.map((project) => [project.project_id, project.name]));
 
-  const commercialPlaceholders = [
+  function formatGbpCompact(value: number | null) {
+    if (value === null || value === undefined) return "No data yet";
+    if (Math.abs(value) >= 1_000_000) return `GBP ${(value / 1_000_000).toFixed(2)}m`;
+    if (Math.abs(value) >= 1_000) return `GBP ${(value / 1_000).toFixed(0)}k`;
+    return `GBP ${value.toFixed(0)}`;
+  }
+
+  function formatPct(value: number | null) {
+    if (value === null || value === undefined) return "No data yet";
+    return `${value.toFixed(1)}%`;
+  }
+
+  const commercialPanels = [
     {
       label: "Revenue Plan MTD",
-      value: "TBD",
-      accent: "indigo" as const,
+      value: formatGbpCompact(k.commercial_revenue_plan_mtd),
+      stroke: "#AD96DC",
+      valueClass: "text-violet-soft",
+      series: data.commercial_trend.map((point) => ({ month: point.label, value: point.revenue_plan_mtd })),
       info: "Planned month-to-date revenue across the active portfolio.",
     },
     {
       label: "Revenue Actual MTD",
-      value: "TBD",
-      accent: "cyan" as const,
+      value: formatGbpCompact(k.commercial_revenue_actual_mtd),
+      stroke: "#74D1EA",
+      valueClass: "text-cyan-soft",
+      series: data.commercial_trend.map((point) => ({ month: point.label, value: point.revenue_actual_mtd })),
       info: "Actual month-to-date revenue delivered across the active portfolio.",
     },
     {
       label: "Margin Forecast %",
-      value: "TBD",
-      accent: "amber" as const,
+      value: formatPct(k.commercial_margin_forecast_pct),
+      stroke: "#F59E0B",
+      valueClass: "text-rag-amber",
+      series: data.commercial_trend.map((point) => ({ month: point.label, value: point.margin_forecast_pct })),
       info: "Forecast portfolio margin percentage based on the latest commercial outlook.",
     },
     {
       label: "Pipeline GBP",
-      value: "TBD",
-      accent: "green" as const,
+      value: formatGbpCompact(k.commercial_pipeline_value_gbp),
+      stroke: "#10B981",
+      valueClass: "text-rag-green",
+      series: data.commercial_trend.map((point) => ({ month: point.label, value: point.pipeline_value_gbp })),
       info: "Total pipeline value in GBP across tracked opportunities.",
     },
   ];
@@ -142,7 +206,6 @@ export function Dashboard() {
           label="Overall RAG"
           value={k.overall_rag}
           accent={k.overall_rag === "Red" ? "red" : k.overall_rag === "Amber" ? "amber" : "green"}
-          pulse={k.overall_rag === "Red"}
           delay={0.1}
           info="Overall portfolio status derived from the latest weekly RAG for each active project. Green means at least 80% of active projects are Green and fewer than 10% are Red. Amber means at least 60% are Green and fewer than 20% are Red. Red means Red projects are 20% or more."
         />
@@ -317,19 +380,62 @@ export function Dashboard() {
             Commercial Metrics
           </div>
           <InfoHint text="Core commercial portfolio metrics covering plan, actuals, forecast margin, and pipeline value." />
+          {data.commercial_month && <div className="text-xs text-ink-subtle">{data.commercial_month.slice(0, 7)}</div>}
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {commercialPlaceholders.map((metric, index) => (
-            <KpiTile
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+          {commercialPanels.map((metric, index) => {
+            const hasSeriesData = metric.series.some((point) => point.value !== null && point.value !== undefined);
+            return (
+            <motion.div
               key={metric.label}
-              label={metric.label}
-              value={metric.value}
-              accent={metric.accent}
-              delay={0.5 + index * 0.05}
-              helper="No data yet"
-              info={metric.info}
-            />
-          ))}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.5 + index * 0.05 }}
+              className="card p-5"
+            >
+              <div className="mb-2 flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[0.72rem] font-bold uppercase tracking-[0.18em] text-ink-subtle" title={metric.info}>
+                    {metric.label}
+                  </div>
+                  <div className={`mt-2 font-numeric text-3xl font-semibold tracking-[-0.04em] ${metric.valueClass}`}>
+                    {metric.value}
+                  </div>
+                </div>
+                <InfoHint text={metric.info} />
+              </div>
+              <div className="mt-4 h-40">
+                {hasSeriesData ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={metric.series}>
+                      <defs>
+                        <linearGradient id={`commercial-${index}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={metric.stroke} stopOpacity={0.3} />
+                          <stop offset="100%" stopColor={metric.stroke} stopOpacity={0.02} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="month" tick={chart.smallTick} axisLine={false} tickLine={false} />
+                      <YAxis hide />
+                      <Tooltip contentStyle={chart.tooltip} />
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke={metric.stroke}
+                        fill={`url(#commercial-${index})`}
+                        strokeWidth={2.5}
+                        animationDuration={900}
+                        connectNulls={false}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="grid h-full place-items-center rounded-2xl border border-dashed border-bg-border bg-bg-elevated/20 text-sm text-ink-subtle">
+                    No data yet
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )})}
         </div>
       </div>
 
@@ -407,6 +513,7 @@ export function Dashboard() {
                   <span className="text-xs text-ink-subtle">{r.status}</span>
                 </div>
                 <div className="mt-1 line-clamp-2 text-ink">{r.description}</div>
+                <div className="mt-1 text-xs text-ink-subtle">Project: {projectNameById.get(r.project_id) ?? "-"}</div>
                 <div className="mt-1 text-xs text-ink-muted">Owner: {r.owner ?? "-"}</div>
               </div>
             ))}
@@ -438,8 +545,8 @@ export function Dashboard() {
                   </span>
                   <span className="text-xs text-ink-subtle">{new Date(e.created_at).toLocaleDateString()}</span>
                 </div>
-                <div className="mt-1 font-medium text-ink">{e.title}</div>
-                {e.description && <div className="mt-1 line-clamp-2 text-ink-muted">{e.description}</div>}
+                <div className="mt-1 text-xs text-ink-subtle">Project: {projectNameById.get(e.project_id) ?? "-"}</div>
+                <div className="mt-1 text-sm text-ink">{e.title}</div>
               </div>
             ))}
           </div>

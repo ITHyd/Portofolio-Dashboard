@@ -31,7 +31,7 @@ def list_items(
 def create_item(
     payload: GovCheckpointCreate,
     db: Session = Depends(get_db),
-    _: User = Depends(require_roles("portfolio_office")),
+    _: User = Depends(require_roles("portfolio_office", "pm")),
 ):
     row = GovCheckpoint(**payload.model_dump())
     db.add(row)
@@ -45,7 +45,7 @@ def update_item(
     item_id: int,
     payload: GovCheckpointUpdate,
     db: Session = Depends(get_db),
-    user: User = Depends(require_roles("portfolio_office")),
+    user: User = Depends(require_roles("portfolio_office", "pm")),
 ):
     row = db.get(GovCheckpoint, item_id)
     if not row:
@@ -53,9 +53,12 @@ def update_item(
     data = payload.model_dump(exclude_unset=True)
     for k, v in data.items():
         setattr(row, k, v)
-    if data.get("status") == "Complete" and row.signed_off_at is None:
+    if data.get("status") == "Completed" and row.signed_off_at is None:
         row.signed_off_at = datetime.now(timezone.utc)
         row.signed_off_by_user_id = user.id
+    elif data.get("status") and data.get("status") != "Completed":
+        row.signed_off_at = None
+        row.signed_off_by_user_id = None
     db.commit()
     db.refresh(row)
     return row
